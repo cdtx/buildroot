@@ -1,0 +1,3 @@
+modprobe via-velocity
+modprobe rndis_host
+modprobe rt2800usb.ko

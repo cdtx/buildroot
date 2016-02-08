@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# Script de démarrage qui lance l'interface réseau internet,
+# met en place un firewall basique et un partage de connexion
+#
+# Inspiré du script de Mjules_at_ifrance.com
+#
+ 
+interface=eth1
+wireless=wlan0
+ 
+# init du la périphérique internet (ici derriere un modem ADSL ethernet, DHCP client)
+ 
+# Dans cette partie, on met en place le firewall
+#vidage des chaines
+iptables -F
+#destruction des chaines personnelles
+iptables -X
+ 
+#stratégies par défaut
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+ 
+#init des tables NAT et MANGLE (pas forcément nécessaire)
+iptables -t nat -F
+iptables -t nat -X
+iptables -t nat -P PREROUTING ACCEPT
+iptables -t nat -P POSTROUTING ACCEPT
+iptables -t nat -P OUTPUT ACCEPT
+ 
+iptables -t mangle -F
+iptables -t mangle -X
+iptables -t mangle -P PREROUTING ACCEPT
+iptables -t mangle -P OUTPUT ACCEPT
+ 
+ 
+# Acceptation de toutes les connexions en local (un process avec l'autre)
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+ 
+# PORT FORWARDING:
+# attention : on ne peut malheureusement pas mettre un nom de machine en destination, il faut mettre l'adresse IP.
+# exemple : on veut qu'un serveur HTTP installé sur une machine du réseau local soit visible depuis l'extérieur.
+###iptables -t nat -A PREROUTING -i $interface -p tcp --dport 80 -j DNAT --to-destination 192.168.10.121:80
+###iptables -A FORWARD -p tcp -i $interface --dport 80 -j ACCEPT
+ 
+ 
+#création d'une nouvelle règle
+iptables -N MAregle
+ 
+#définition de la règle : accepter les nouvelles connexions ne venant pas de l'interface internet
+# et accepter toutes les connexions établies et reliées (ex: une demande de page HTML provoque l'ouverture
+# d'une connexion reliée pour acheminer cette page vers l'ordinateur)
+ 
+iptables -A MAregle -m state --state NEW ! -i $interface -j ACCEPT
+iptables -A MAregle -m state --state NEW ! -i $wireless -j ACCEPT
+iptables -A MAregle -m state --state ESTABLISHED,RELATED -j ACCEPT
+ 
+#application de la règle au partage de connexion
+iptables -A INPUT -j MAregle
+iptables -A FORWARD -j MAregle
+ 
+# activation du forwarding dans le noyau
+# mise en place du partage de connexion sur le réseau local
+ 
+echo 1 >/proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -s 192.168.0.0/24 -o $interface -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o $wireless -j MASQUERADE

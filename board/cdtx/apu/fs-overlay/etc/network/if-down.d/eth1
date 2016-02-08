@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# Script de démarrage qui lance l'interface réseau internet,
+# met en place un firewall basique et un partage de connexion
+#
+# Inspiré du script de Mjules_at_ifrance.com
+#
+ 
+interface=eth1
+ 
+# Dans cette partie, on met en place le firewall
+#vidage des chaines
+iptables -F
+#destruction des chaines personnelles
+iptables -X
+ 
+#stratégies par défaut
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT

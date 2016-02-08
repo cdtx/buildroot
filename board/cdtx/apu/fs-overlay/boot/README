@@ -1,0 +1,16 @@
+Installation process
+====================
+
+    - Copy the root filesystem and initramfs through sftp :    
+    ``` bash
+        # sftp cdtx@192.168.0.1
+        # get developpment/linux/buildroot-2014.02/output/images/bzImage
+        # get developpment/linux/buildroot-2014.02/output/images/rootfs.tar
+        # get developpment/linux/buildroot-2014.02/board/cdtx/apu/initramfs.cpio.gz
+    ```
+
+    - Run installer script
+    ``` bash
+        # ./install.sh
+    ```
+
